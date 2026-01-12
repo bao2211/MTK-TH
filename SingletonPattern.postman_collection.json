@@ -1,0 +1,580 @@
+{
+	"info": {
+		"_postman_id": "singleton-pattern-demo",
+		"name": "Singleton Pattern - Logger Service Demo",
+		"description": "Collection để test và demo Singleton Pattern với Logger Service.\nChạy theo thứ tự để thấy logs tích lũy từ nhiều Controllers khác nhau vào cùng một Singleton instance.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has LoggerInstanceId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('loggerInstanceId');",
+							"    ",
+							"    // Lưu Instance ID để so sánh với các request khác",
+							"    pm.environment.set(\"loggerInstanceId\", jsonData.loggerInstanceId);",
+							"    console.log(\"✅ Logger Instance ID:\", jsonData.loggerInstanceId);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/health",
+					"host": ["{{baseUrl}}"],
+					"path": ["health"]
+				},
+				"description": "Kiểm tra API đang chạy và lấy Logger Instance ID đầu tiên"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get All Users (UserController)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"UserController uses SAME Singleton Instance\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"    console.log(\"✅ UserController Instance ID:\", jsonData.loggerInstanceId);",
+							"    console.log(\"✅ MATCH with saved ID:\", savedInstanceId);",
+							"});",
+							"",
+							"pm.test(\"Response has user data\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"    pm.expect(jsonData.data.length).to.be.at.least(1);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/user",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "user"]
+				},
+				"description": "Lấy danh sách users - Logs sẽ được ghi bởi UserController"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Get User By ID (UserController)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"UserController still uses SAME Instance\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"    console.log(\"✅ Still same Instance ID:\", jsonData.loggerInstanceId);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/user/5",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "user", "5"]
+				},
+				"description": "Lấy user theo ID - Thêm logs vào cùng Logger instance"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Get All Products (ProductController)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"ProductController uses SAME Singleton Instance\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"    console.log(\"✅ ProductController Instance ID:\", jsonData.loggerInstanceId);",
+							"    console.log(\"🎯 SAME as UserController! Singleton works!\");",
+							"});",
+							"",
+							"pm.test(\"Response has product data\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/product",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "product"]
+				},
+				"description": "Lấy danh sách products - ProductController cũng dùng CÙNG Logger instance"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Search Products (ProductController)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Still using SAME Singleton Instance\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/product/search?keyword=laptop",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "product", "search"],
+					"query": [
+						{
+							"key": "keyword",
+							"value": "laptop"
+						}
+					]
+				},
+				"description": "Tìm kiếm sản phẩm - Thêm logs vào cùng instance"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Create User (UserController)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"POST request also uses SAME Instance\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Nguyễn Văn Test\",\n  \"email\": \"test@example.com\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/user",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "user"]
+				},
+				"description": "Tạo user mới - POST request cũng dùng CÙNG Logger instance"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Get User with Invalid ID (Warning Log)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400 (Bad Request)\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Error also uses SAME Singleton Instance\", function () {",
+							"    // Không có loggerInstanceId trong error response",
+							"    console.log(\"⚠️ Request này tạo WARNING log trong Singleton Logger\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/user/-1",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "user", "-1"]
+				},
+				"description": "Request với ID không hợp lệ - Tạo WARNING log"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Get User Not Found (Error Log)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404 (Not Found)\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});",
+							"",
+							"pm.test(\"Error also logged in Singleton\", function () {",
+							"    console.log(\"❌ Request này tạo ERROR log trong Singleton Logger\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/user/999",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "user", "999"]
+				},
+				"description": "Request user không tồn tại - Tạo ERROR log"
+			},
+			"response": []
+		},
+		{
+			"name": "9. VERIFY SINGLETON - Instance Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"🎯 SINGLETON VERIFIED - All instances are SAME\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.isSingleton).to.be.true;",
+							"    pm.expect(jsonData.instance1Id).to.eql(jsonData.instance2Id);",
+							"    pm.expect(jsonData.instance2Id).to.eql(jsonData.instance3Id);",
+							"    pm.expect(jsonData.instance3Id).to.eql(jsonData.currentInstanceId);",
+							"    pm.expect(jsonData.currentInstanceId).to.eql(savedInstanceId);",
+							"    ",
+							"    console.log(\"\\n🎉 ========================================\");",
+							"    console.log(\"✅ SINGLETON PATTERN WORKS PERFECTLY!\");",
+							"    console.log(\"✅ Instance 1 ID:\", jsonData.instance1Id);",
+							"    console.log(\"✅ Instance 2 ID:\", jsonData.instance2Id);",
+							"    console.log(\"✅ Instance 3 ID:\", jsonData.instance3Id);",
+							"    console.log(\"✅ Current ID:\", jsonData.currentInstanceId);",
+							"    console.log(\"✅ Saved ID:\", savedInstanceId);",
+							"    console.log(\"🎯 All IDs are IDENTICAL!\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log/verify-singleton",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log", "verify-singleton"]
+				},
+				"description": "🎯 KIỂM TRA SINGLETON - Xác nhận tất cả instances đều giống nhau"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Get ALL Logs (See Accumulated Logs)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"📊 Logs accumulated from ALL Controllers\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.loggerInstanceId).to.eql(savedInstanceId);",
+							"    pm.expect(jsonData.totalLogs).to.be.above(0);",
+							"    ",
+							"    console.log(\"\\n📊 ========================================\");",
+							"    console.log(\"📝 TOTAL LOGS ACCUMULATED:\", jsonData.totalLogs);",
+							"    console.log(\"✅ Logger Instance ID:\", jsonData.loggerInstanceId);",
+							"    console.log(\"\\n📋 Log entries from different controllers:\");",
+							"    ",
+							"    var userControllerLogs = 0;",
+							"    var productControllerLogs = 0;",
+							"    var logControllerLogs = 0;",
+							"    var otherLogs = 0;",
+							"    ",
+							"    jsonData.data.forEach(function(log) {",
+							"        if (log.source.includes('UserController')) {",
+							"            userControllerLogs++;",
+							"        } else if (log.source.includes('ProductController')) {",
+							"            productControllerLogs++;",
+							"        } else if (log.source.includes('LogController')) {",
+							"            logControllerLogs++;",
+							"        } else {",
+							"            otherLogs++;",
+							"        }",
+							"    });",
+							"    ",
+							"    console.log(\"   👤 UserController logs:\", userControllerLogs);",
+							"    console.log(\"   📦 ProductController logs:\", productControllerLogs);",
+							"    console.log(\"   📊 LogController logs:\", logControllerLogs);",
+							"    console.log(\"   🔧 Other logs (Program, etc):\", otherLogs);",
+							"    console.log(\"\\n🎯 All logs from different controllers are in\");",
+							"    console.log(\"   the SAME Singleton Logger instance!\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log"]
+				},
+				"description": "📊 XEM TẤT CẢ LOGS - Logs từ UserController, ProductController, LogController đều tích lũy trong cùng một Singleton instance"
+			},
+			"response": []
+		},
+		{
+			"name": "11. Get Log Statistics",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"📈 Statistics from Singleton Logger\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var savedInstanceId = pm.environment.get(\"loggerInstanceId\");",
+							"    ",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.loggerInstanceId).to.eql(savedInstanceId);",
+							"    ",
+							"    console.log(\"\\n📈 ========================================\");",
+							"    console.log(\"📊 LOG STATISTICS:\");",
+							"    console.log(\"   Total Logs:\", jsonData.data.totalLogs);",
+							"    console.log(\"   ✅ INFO Logs:\", jsonData.data.infoLogs);",
+							"    console.log(\"   ⚠️  WARNING Logs:\", jsonData.data.warningLogs);",
+							"    console.log(\"   ❌ ERROR Logs:\", jsonData.data.errorLogs);",
+							"    console.log(\"   🔑 Logger Instance:\", jsonData.data.loggerInstanceId);",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log/stats",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log", "stats"]
+				},
+				"description": "📈 Xem thống kê logs - INFO, WARNING, ERROR từ cùng Singleton instance"
+			},
+			"response": []
+		},
+		{
+			"name": "12. Get INFO Logs Only",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs are INFO level\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.data.forEach(function(log) {",
+							"        pm.expect(log.level).to.eql('INFO');",
+							"    });",
+							"    console.log(\"✅ Total INFO logs:\", jsonData.totalLogs);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log/level/INFO",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log", "level", "INFO"]
+				},
+				"description": "Lọc chỉ xem INFO logs từ Singleton instance"
+			},
+			"response": []
+		},
+		{
+			"name": "13. Get WARNING Logs Only",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs are WARNING level\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.data.forEach(function(log) {",
+							"        pm.expect(log.level).to.eql('WARNING');",
+							"    });",
+							"    console.log(\"⚠️ Total WARNING logs:\", jsonData.totalLogs);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log/level/WARNING",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log", "level", "WARNING"]
+				},
+				"description": "Lọc chỉ xem WARNING logs"
+			},
+			"response": []
+		},
+		{
+			"name": "14. Get ERROR Logs Only",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"All logs are ERROR level\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.data.forEach(function(log) {",
+							"        pm.expect(log.level).to.eql('ERROR');",
+							"    });",
+							"    console.log(\"❌ Total ERROR logs:\", jsonData.totalLogs);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/log/level/ERROR",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "log", "level", "ERROR"]
+				},
+				"description": "Lọc chỉ xem ERROR logs"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
