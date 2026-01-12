@@ -32,3 +32,6 @@ C:\Users\Admin\Documents\School\MTK-TH\obj\Debug\net8.0\refint\SingletonPattern.
 C:\Users\Admin\Documents\School\MTK-TH\obj\Debug\net8.0\SingletonPattern.pdb
 C:\Users\Admin\Documents\School\MTK-TH\obj\Debug\net8.0\SingletonPattern.genruntimeconfig.cache
 C:\Users\Admin\Documents\School\MTK-TH\obj\Debug\net8.0\ref\SingletonPattern.dll
+C:\Users\Admin\Documents\School\MTK-TH\bin\Debug\net8.0\Postman\FactoryMethod.postman_collection.json
+C:\Users\Admin\Documents\School\MTK-TH\bin\Debug\net8.0\Postman\Singleton.postman_collection.json
+C:\Users\Admin\Documents\School\MTK-TH\obj\Debug\net8.0\SingletonPattern.sourcelink.json

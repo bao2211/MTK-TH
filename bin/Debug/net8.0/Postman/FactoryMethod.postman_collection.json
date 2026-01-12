@@ -1,0 +1,495 @@
+{
+	"info": {
+		"_postman_id": "factory-method-pattern-demo",
+		"name": "Factory Method Pattern - Payment API Demo",
+		"description": "Collection để test Factory Method Pattern với Payment API.\nDemo cách Factory tạo các payment methods khác nhau (Cash, PayPal, VNPay).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Get Payment Methods",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has payment methods\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data).to.be.an('array');",
+							"    pm.expect(jsonData.data.length).to.equal(3);",
+							"    ",
+							"    console.log(\"\\n📋 ========================================\");",
+							"    console.log(\"💳 PAYMENT METHODS AVAILABLE:\");",
+							"    jsonData.data.forEach(function(method) {",
+							"        console.log(`\\n  ✅ ${method.displayName} (${method.type})`);",
+							"        console.log(`     ${method.description}`);",
+							"        console.log(`     Fee: ${method.feeDescription}`);",
+							"        console.log(`     Required: ${method.requiredFields.join(', ')}`);",
+							"    });",
+							"    console.log(\"\\n========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/methods",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "methods"]
+				},
+				"description": "Lấy danh sách các payment methods được hỗ trợ"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Process Cash Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"🎯 Factory created CashPayment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.paymentType).to.equal('CASH');",
+							"    pm.expect(jsonData.data.transactionFee).to.equal(0);",
+							"    ",
+							"    console.log(\"\\n💵 ========================================\");",
+							"    console.log(\"✅ CASH PAYMENT SUCCESSFUL\");",
+							"    console.log(`   Transaction ID: ${jsonData.data.transactionId}`);",
+							"    console.log(`   Amount: ${jsonData.data.amount.toLocaleString()} VNĐ`);",
+							"    console.log(`   Fee: ${jsonData.data.transactionFee} VNĐ (FREE)`);",
+							"    console.log(`   Total: ${jsonData.data.totalAmount.toLocaleString()} VNĐ`);",
+							"    console.log(\"\\n🎯 Factory Method created: CashPayment class\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"paymentType\": \"CASH\",\n  \"amount\": 500000,\n  \"orderId\": \"ORD-CASH-001\",\n  \"additionalData\": {\n    \"ReceivedAmount\": \"500000\",\n    \"ChangeAmount\": \"0\",\n    \"Cashier\": \"John Doe\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/process",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "process"]
+				},
+				"description": "Factory tạo CashPayment object - Không có phí giao dịch"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Process PayPal Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"🎯 Factory created PaypalPayment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.paymentType).to.equal('PAYPAL');",
+							"    pm.expect(jsonData.data.transactionFee).to.be.above(0);",
+							"    ",
+							"    var feePercent = (jsonData.data.transactionFee / jsonData.data.amount * 100).toFixed(2);",
+							"    ",
+							"    console.log(\"\\n💳 ========================================\");",
+							"    console.log(\"✅ PAYPAL PAYMENT SUCCESSFUL\");",
+							"    console.log(`   Transaction ID: ${jsonData.data.transactionId}`);",
+							"    console.log(`   Amount: $${jsonData.data.amount}`);",
+							"    console.log(`   Fee: $${jsonData.data.transactionFee.toFixed(2)} (${feePercent}%)`);",
+							"    console.log(`   Total: $${jsonData.data.totalAmount.toFixed(2)}`);",
+							"    console.log(`   PayPal Email: ${jsonData.data.additionalInfo.PaypalEmail}`);",
+							"    console.log(\"\\n🎯 Factory Method created: PaypalPayment class\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"paymentType\": \"PAYPAL\",\n  \"amount\": 100,\n  \"orderId\": \"ORD-PAYPAL-002\",\n  \"additionalData\": {\n    \"PaypalEmail\": \"customer@example.com\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/process",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "process"]
+				},
+				"description": "Factory tạo PaypalPayment object - Phí 3.4% + $0.30"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Process VNPay Payment",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"🎯 Factory created VNPayPayment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.paymentType).to.equal('VNPAY');",
+							"    pm.expect(jsonData.data.transactionFee).to.be.above(0);",
+							"    ",
+							"    var feePercent = (jsonData.data.transactionFee / jsonData.data.amount * 100).toFixed(2);",
+							"    ",
+							"    console.log(\"\\n🏦 ========================================\");",
+							"    console.log(\"✅ VNPAY PAYMENT SUCCESSFUL\");",
+							"    console.log(`   Transaction ID: ${jsonData.data.transactionId}`);",
+							"    console.log(`   Amount: ${jsonData.data.amount.toLocaleString()} VNĐ`);",
+							"    console.log(`   Fee: ${jsonData.data.transactionFee.toLocaleString()} VNĐ (${feePercent}%)`);",
+							"    console.log(`   Total: ${jsonData.data.totalAmount.toLocaleString()} VNĐ`);",
+							"    console.log(`   Bank: ${jsonData.data.additionalInfo.BankCode}`);",
+							"    console.log(\"\\n🎯 Factory Method created: VNPayPayment class\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"paymentType\": \"VNPAY\",\n  \"amount\": 1000000,\n  \"orderId\": \"ORD-VNPAY-003\",\n  \"additionalData\": {\n    \"BankCode\": \"NCB\",\n    \"CardNumber\": \"9704123456789012\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/process",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "process"]
+				},
+				"description": "Factory tạo VNPayPayment object - Phí 2% (max 50k VNĐ)"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Calculate Fee - Cash",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Cash has no fee\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.transactionFee).to.equal(0);",
+							"    console.log(\"💵 CASH: No transaction fee\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/calculate-fee?paymentType=CASH&amount=1000000",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "calculate-fee"],
+					"query": [
+						{
+							"key": "paymentType",
+							"value": "CASH"
+						},
+						{
+							"key": "amount",
+							"value": "1000000"
+						}
+					]
+				},
+				"description": "Tính phí cho thanh toán tiền mặt"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Calculate Fee - PayPal",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"PayPal fee calculation\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.transactionFee).to.be.above(0);",
+							"    console.log(`💳 PAYPAL Fee: $${jsonData.data.transactionFee.toFixed(2)} (${jsonData.data.feePercentage.toFixed(2)}%)`);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/calculate-fee?paymentType=PAYPAL&amount=100",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "calculate-fee"],
+					"query": [
+						{
+							"key": "paymentType",
+							"value": "PAYPAL"
+						},
+						{
+							"key": "amount",
+							"value": "100"
+						}
+					]
+				},
+				"description": "Tính phí cho thanh toán PayPal"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Calculate Fee - VNPay",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"VNPay fee calculation\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.data.transactionFee).to.be.above(0);",
+							"    pm.expect(jsonData.data.transactionFee).to.be.at.most(50000);",
+							"    console.log(`🏦 VNPAY Fee: ${jsonData.data.transactionFee.toLocaleString()} VNĐ (${jsonData.data.feePercentage.toFixed(2)}%)`);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/calculate-fee?paymentType=VNPAY&amount=1000000",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "calculate-fee"],
+					"query": [
+						{
+							"key": "paymentType",
+							"value": "VNPAY"
+						},
+						{
+							"key": "amount",
+							"value": "1000000"
+						}
+					]
+				},
+				"description": "Tính phí cho thanh toán VNPay"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Demo Factory Pattern",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"🎯 Factory Method Pattern Demo\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.true;",
+							"    pm.expect(jsonData.data.paymentMethods).to.be.an('array');",
+							"    pm.expect(jsonData.data.paymentMethods.length).to.equal(3);",
+							"    ",
+							"    console.log(\"\\n🏭 ========================================\");",
+							"    console.log(\"🎯 FACTORY METHOD PATTERN DEMO\");",
+							"    console.log(`\\nFactory Type: ${jsonData.data.factoryType}`);",
+							"    console.log(\"\\n📦 Products created by Factory:\");",
+							"    ",
+							"    jsonData.data.paymentMethods.forEach(function(method) {",
+							"        console.log(`\\n  ✅ ${method.paymentType}`);",
+							"        console.log(`     Class: ${method.className}`);",
+							"        console.log(`     Instance HashCode: ${method.hashCode}`);",
+							"        console.log(`     Sample Fee (1M): ${method.sampleFee.toLocaleString()}`);",
+							"    });",
+							"    ",
+							"    console.log(\"\\n💡 Note:\");",
+							"    console.log(\"   - Each call creates a NEW instance\");",
+							"    console.log(\"   - Factory decides which class to instantiate\");",
+							"    console.log(\"   - Client doesn't need to know concrete classes\");",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/demo-factory",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "demo-factory"]
+				},
+				"description": "Demo Factory Method Pattern - Xem cách Factory tạo các payment methods khác nhau"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Unsupported Payment Method",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Factory rejects unsupported payment\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    pm.expect(jsonData.message).to.include('không được hỗ trợ');",
+							"    ",
+							"    console.log(\"\\n❌ ========================================\");",
+							"    console.log(\"❌ UNSUPPORTED PAYMENT METHOD\");",
+							"    console.log(`   Error: ${jsonData.message}`);",
+							"    console.log(`   Supported: ${jsonData.data.supportedMethods.join(', ')}`);",
+							"    console.log(\"========================================\\n\");",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"paymentType\": \"BITCOIN\",\n  \"amount\": 1000000,\n  \"orderId\": \"ORD-FAIL-001\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/process",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "process"]
+				},
+				"description": "Test với payment method không được hỗ trợ - Factory sẽ throw exception"
+			},
+			"response": []
+		},
+		{
+			"name": "10. VNPay with Invalid Bank Code",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 400\", function () {",
+							"    pm.response.to.have.status(400);",
+							"});",
+							"",
+							"pm.test(\"Validation failed\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.success).to.be.false;",
+							"    console.log(\"❌ Validation Error:\", jsonData.message);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"paymentType\": \"VNPAY\",\n  \"amount\": 1000000,\n  \"orderId\": \"ORD-FAIL-002\",\n  \"additionalData\": {\n    \"BankCode\": \"INVALID_BANK\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/payment/process",
+					"host": ["{{baseUrl}}"],
+					"path": ["api", "payment", "process"]
+				},
+				"description": "Test validation - VNPay với mã ngân hàng không hợp lệ"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
